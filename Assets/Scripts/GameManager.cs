@@ -91,7 +91,12 @@ public class GameManager : MonoBehaviour {
         foreach(WorldTile tile in tiles)
         {
             tile.inReach = false;
+            tile.visited = false;
+            tile.parent = null;
+            tile.hasUnit = false;
+            tile.tileDistance = 0;
         }
+        UpdateMap();
     }
 
     public void DeactivateUnits()

@@ -20,6 +20,7 @@ public class UnitScript : MonoBehaviour {
             {
                 move = false;
                 gm.UpdateMap();
+                active = false;
             }
             else
             {
@@ -50,6 +51,7 @@ public class UnitScript : MonoBehaviour {
         {
             movesRemaining = moves;
             gm.DeactivateUnits();
+            gm.HideTilesInReach();
             active = true;
             gm.IAmActive(this);
         }
