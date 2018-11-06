@@ -32,7 +32,6 @@ public class GameManager : MonoBehaviour {
                 if(t.transform.position == u.transform.position)
                 {
                     t.hasUnit = true;
-                    return;
                 }
             }
         }
