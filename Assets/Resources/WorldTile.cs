@@ -4,11 +4,7 @@ using UnityEngine;
 
 public class WorldTile: MonoBehaviour {
 
-    public string TileType { get; set; }
-
-    public bool hasUnit, inReach, visited;
-
-    public Vector3Int TilePosition { get; set; }
+    public bool hasUnit, inReach, visited, unpassable;
 
     public WorldTile parent;
 
@@ -33,6 +29,11 @@ public class WorldTile: MonoBehaviour {
     {
         if (inReach)
         {
+            if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
+            {
+                gm.MakePath(this);
+                gm.HideTilesInReach();
+            }
             if (!effect.activeInHierarchy)
             {
                 effect.SetActive(true);
@@ -45,19 +46,12 @@ public class WorldTile: MonoBehaviour {
                 effect.SetActive(false);
             }
         }
-    }
 
-    private void OnMouseDown()
-    {
-        if (gm.activeUnit && inReach)
-        {
-            gm.activeUnit.Move(transform.position);
-            gm.HideTilesInReach();
-        }
     }
 
     public void FindNeighbours()
     {
+        adjacentTiles.Clear();
         CheckTile(Vector2.up);
         CheckTile(-Vector2.up);
         CheckTile(Vector2.right);
@@ -66,13 +60,14 @@ public class WorldTile: MonoBehaviour {
 
     void CheckTile(Vector2 dir)
     {
-        Collider2D[] colliders = Physics2D.OverlapBoxAll((Vector2)transform.position + dir, new Vector2(0.25f, 0.25f), 0);
+        Collider2D[] colliders = Physics2D.OverlapBoxAll((Vector2)transform.position + dir, new Vector2(0.1f, 0.1f), 0);
 
         foreach(Collider2D col in colliders)
         {
-            if(col.GetComponent<WorldTile>() != null && col.GetComponent<WorldTile>().TileType != "Unpassable" && !col.GetComponent<WorldTile>().hasUnit)
+            WorldTile t = col.GetComponent<WorldTile>();
+            if(t != null && !t.unpassable && !t.hasUnit)
             {
-               adjacentTiles.Add(col.GetComponent<WorldTile>());
+                adjacentTiles.Add(col.GetComponent<WorldTile>());
             }
         }
     }

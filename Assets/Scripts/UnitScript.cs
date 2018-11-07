@@ -5,55 +5,41 @@ public class UnitScript : MonoBehaviour {
     GameManager gm;
     public short moves = 3, range = 5, health = 3, movesRemaining;
     [SerializeField] float moveSpeed = 0.005f;
-    public bool active;
-    bool move;
+    public bool active, moving;
     Vector2 destination, startPos;
+    public WorldTile endTile;
+    short counter;
+    bool find = true;
 
     void Start () {
         gm = FindObjectOfType<GameManager>();
 	}
-	
-	void Update () {
-        if (move)
+
+    private void Update()
+    {
+        if (moving)
         {
-            if((Vector2)transform.position == destination)
+            if(transform.position == endTile.transform.position)
             {
-                move = false;
-                gm.UpdateMap();
-                active = false;
+                moving = false;
+                find = true;
             }
             else
             {
-                if(transform.position.x == destination.x)
+                if(transform.position == gm.path.Peek().transform.position)
                 {
-                    transform.position = Vector2.MoveTowards(transform.position, new Vector2(transform.position.x, destination.y), moveSpeed);
+                    gm.path.Pop();
                 }
-                else
-                {
-                    transform.position = Vector2.MoveTowards(transform.position, new Vector2(destination.x, transform.position.y), moveSpeed);
-                }
-            } 
+                transform.position = Vector2.MoveTowards(transform.position, gm.path.Peek().transform.position, moveSpeed);
+            }
         }
-	}
-
-    public void Move(Vector2 location)
-    {
-        startPos = transform.position;
-        destination = location;
-        move = true;
-        movesRemaining -= (short)(Vector2.Distance(new Vector2(destination.x, transform.position.y), transform.position) + Vector2.Distance(new Vector2(transform.position.x, destination.y), transform.position));
-
     }
 
-    void OnMouseDown()
+    public void ActivateUnit()
     {
-        if (!active)
-        {
-            movesRemaining = moves;
-            gm.DeactivateUnits();
-            gm.HideTilesInReach();
-            active = true;
-            gm.IAmActive(this);
-        }
+        movesRemaining = moves;
+        gm.DeactivateUnits();
+        gm.HideTilesInReach();
+        active = true;
     }
 }
