@@ -5,11 +5,10 @@ public class UnitScript : MonoBehaviour {
     GameManager gm;
     public short moves = 3, range = 5, health = 3, movesRemaining;
     [SerializeField] float moveSpeed = 0.005f;
-    public bool active, moving;
+    public bool active, moving, canAttack;
     Vector2 destination, startPos;
     public WorldTile endTile;
     short counter;
-    bool find = true;
 
     void Start () {
         gm = FindObjectOfType<GameManager>();
@@ -22,7 +21,6 @@ public class UnitScript : MonoBehaviour {
             if(transform.position == endTile.transform.position)
             {
                 moving = false;
-                find = true;
             }
             else
             {
@@ -33,6 +31,12 @@ public class UnitScript : MonoBehaviour {
                 transform.position = Vector2.MoveTowards(transform.position, gm.path.Peek().transform.position, moveSpeed);
             }
         }
+    }
+
+    public void InitiateAttack()
+    {
+        canAttack = true;
+        gm.ShowTilesInAttackReach();
     }
 
     public void ActivateUnit()
