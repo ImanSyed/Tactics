@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
+using System.Linq;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour {
 
-    public UnitScript[] units;
+    public List<UnitScript> units;
     public WorldTile[] tiles;
 
     public UnitScript activeUnit;
@@ -16,14 +17,18 @@ public class GameManager : MonoBehaviour {
 
     public GameObject cursorObject, activeEffect;
 
-
+    [SerializeField] GameObject UIObject;
+    
 	void Start () {
 
         tiles = FindObjectsOfType<WorldTile>();
 
-        units = FindObjectsOfType<UnitScript>();
+        units = FindObjectsOfType<UnitScript>().ToList();
 
         UpdateMap();
+
+        activeUnit = FindObjectOfType<UnitScript>();
+        activeUnit.ActivateUnit();
 
         Cursor.visible = false;
 	}
@@ -33,23 +38,31 @@ public class GameManager : MonoBehaviour {
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = 0;
         mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-        cursorObject.transform.position = new Vector3(Round(mousePos.x), Round(mousePos.y), -1);
+        cursorObject.transform.position = new Vector3(Round(mousePos.x), Round(mousePos.y), -9);
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            foreach (UnitScript u in units)
-            {
-                if ((Vector2)u.transform.position == (Vector2)cursorObject.transform.position)
-                {
-                    u.ActivateUnit();
-                    activeUnit = u;
-                    ShowTilesInMoveReach();
-                }
-            }
-        }
         if (activeUnit)
         {
             activeEffect.transform.position = activeUnit.transform.position;
+            if (!UIObject.activeInHierarchy)
+            {
+                UIObject.SetActive(true);
+            }
+        }
+        else if (UIObject.activeInHierarchy)
+        {
+            UIObject.SetActive(false);
+        }
+    }
+
+    public void ToggleFakeCursor()
+    {
+        if (cursorObject.GetComponent<Renderer>().enabled)
+        {
+            cursorObject.GetComponent<Renderer>().enabled = false;
+        }
+        else
+        {
+            cursorObject.GetComponent<Renderer>().enabled = true;
         }
     }
 
@@ -77,13 +90,15 @@ public class GameManager : MonoBehaviour {
     {
         WorldTile activeTile = null;
 
+        activeUnit.attacking = true;
+
         foreach (WorldTile tile in tiles)
         {
             if (tile.transform.position == activeUnit.transform.position)
             {
                 activeTile = tile;
             }
-            tile.FindNeighbours();
+            tile.FindNeighbours(true);
         }
 
         Queue<WorldTile> process = new Queue<WorldTile>();
@@ -95,10 +110,9 @@ public class GameManager : MonoBehaviour {
         {
             WorldTile t = process.Dequeue();
 
-            if (!t.hasUnit)
-            {
-                t.inReach = true;
-            }
+            
+            t.inAttackReach = true;
+
             if (t.tileDistance < activeUnit.range)
             {
                 foreach (WorldTile tile in t.adjacentTiles)
@@ -113,7 +127,7 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
-        activeTile.inReach = false;
+        activeTile.inMoveReach = false;
     }
 
     public void ShowTilesInMoveReach()
@@ -126,7 +140,7 @@ public class GameManager : MonoBehaviour {
             {
                 activeTile = tile;
             }
-            tile.FindNeighbours();
+            tile.FindNeighbours(false);
         }
 
         Queue<WorldTile> process = new Queue<WorldTile>();
@@ -140,7 +154,7 @@ public class GameManager : MonoBehaviour {
 
             if (!t.hasUnit)
             {
-                t.inReach = true;
+                t.inMoveReach = true;
             }
             if (t.tileDistance < activeUnit.movesRemaining)
             {
@@ -156,7 +170,7 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
-        activeTile.inReach = false;
+        activeTile.inMoveReach = false;
     }
 
     public void MakePath(WorldTile tile)
@@ -173,14 +187,15 @@ public class GameManager : MonoBehaviour {
         activeUnit.moving = true;
     }
 
-    public void HideTilesInReach()
+    public void ResetTiles()
     {
         foreach(WorldTile tile in tiles)
         {
-            tile.inReach = false;
+            tile.inMoveReach = false;
             tile.visited = false;
             tile.parent = null;
             tile.hasUnit = false;
+            tile.inAttackReach = false;
             tile.tileDistance = 0;
         }
         UpdateMap();

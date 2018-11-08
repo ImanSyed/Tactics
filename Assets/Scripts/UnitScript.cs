@@ -1,11 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Collections;
+using UnityEngine;
+
+
 
 public class UnitScript : MonoBehaviour {
 
     GameManager gm;
-    public short moves = 3, range = 5, health = 3, movesRemaining;
+    public short moves = 3, range = 5, health = 3, damage = 2, movesRemaining;
     [SerializeField] float moveSpeed = 0.005f;
-    public bool active, moving, canAttack;
+    public bool active, moving, attacking;
     Vector2 destination, startPos;
     public WorldTile endTile;
     short counter;
@@ -21,6 +25,7 @@ public class UnitScript : MonoBehaviour {
             if(transform.position == endTile.transform.position)
             {
                 moving = false;
+                gm.ResetTiles();
             }
             else
             {
@@ -33,17 +38,43 @@ public class UnitScript : MonoBehaviour {
         }
     }
 
-    public void InitiateAttack()
+    public void PerformAttack(WorldTile t)
     {
-        canAttack = true;
-        gm.ShowTilesInAttackReach();
+        if (t.hasUnit)
+        {
+            foreach(UnitScript u in FindObjectsOfType<UnitScript>())
+            {
+                if((Vector2)u.transform.position == (Vector2)t.transform.position)
+                {
+                    u.DealDamage(damage);
+                    attacking = false;
+                    return;
+                }
+            }
+        }
+    }
+
+    public void DealDamage(short dmg)
+    {
+        health -= dmg;
+        if(health <= 0)
+        {
+            gm.units.Remove(this);
+            gm.ResetTiles();
+            DestroyUnit();
+        }
     }
 
     public void ActivateUnit()
     {
         movesRemaining = moves;
         gm.DeactivateUnits();
-        gm.HideTilesInReach();
+        gm.ResetTiles();
         active = true;
+    }
+
+    void DestroyUnit()
+    {
+        Destroy(gameObject);
     }
 }

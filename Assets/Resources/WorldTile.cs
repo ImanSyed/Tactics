@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WorldTile: MonoBehaviour {
 
-    public bool hasUnit, inReach, visited, unpassable;
+    public bool hasUnit, inMoveReach, visited, unpassable, inAttackReach;
 
     public WorldTile parent;
 
@@ -12,62 +12,92 @@ public class WorldTile: MonoBehaviour {
 
     GameManager gm;
 
-    [SerializeField] GameObject reachEffect;
+    [SerializeField] GameObject moveReachEffect, attackReachEffect;
 
-    GameObject effect;
+    GameObject moveEffect, attackEffect;
 
     public List<WorldTile> adjacentTiles;
 
     private void Start()
     {
         gm = FindObjectOfType<GameManager>();
-        effect = Instantiate(reachEffect, transform.position, Quaternion.identity);
-        effect.SetActive(false);
+        moveEffect = Instantiate(moveReachEffect, transform.position, Quaternion.identity);
+        attackEffect = Instantiate(attackReachEffect, transform.position, Quaternion.identity);
+        moveEffect.SetActive(false);
+        attackEffect.SetActive(false);
     }
 
     private void Update()
     {
-        if (inReach)
+        if (inMoveReach)
         {
             if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
             {
                 gm.MakePath(this);
-                gm.HideTilesInReach();
+                gm.ResetTiles();
             }
-            if (!effect.activeInHierarchy)
+            if (!moveEffect.activeInHierarchy)
             {
-                effect.SetActive(true);
+                moveEffect.SetActive(true);
             }
         }
         else
         {
-            if (effect.activeInHierarchy)
+            if (moveEffect.activeInHierarchy)
             {
-                effect.SetActive(false);
+                moveEffect.SetActive(false);
             }
         }
-
+        if (inAttackReach)
+        {
+            if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
+            {
+                gm.activeUnit.PerformAttack(this);
+            }
+            if (!attackEffect.activeInHierarchy)
+            {
+                attackEffect.SetActive(true);
+            }
+        }
+        else
+        {
+            if (attackEffect.activeInHierarchy)
+            {
+                attackEffect.SetActive(false);
+            }
+        }
+        
     }
 
-    public void FindNeighbours()
+    public void FindNeighbours(bool includeUnits)
     {
         adjacentTiles.Clear();
-        CheckTile(Vector2.up);
-        CheckTile(-Vector2.up);
-        CheckTile(Vector2.right);
-        CheckTile(-Vector2.right);
+        CheckTile(Vector2.up, includeUnits);
+        CheckTile(-Vector2.up, includeUnits);
+        CheckTile(Vector2.right, includeUnits);
+        CheckTile(-Vector2.right, includeUnits);
     }
 
-    void CheckTile(Vector2 dir)
+    void CheckTile(Vector2 dir, bool includeUnits)
     {
         Collider2D[] colliders = Physics2D.OverlapBoxAll((Vector2)transform.position + dir, new Vector2(0.1f, 0.1f), 0);
 
         foreach(Collider2D col in colliders)
         {
             WorldTile t = col.GetComponent<WorldTile>();
-            if(t != null && !t.unpassable && !t.hasUnit)
+            if(t != null && !t.unpassable)
             {
-                adjacentTiles.Add(col.GetComponent<WorldTile>());
+                if (includeUnits)
+                {
+                    adjacentTiles.Add(col.GetComponent<WorldTile>());
+                }
+                else
+                {
+                    if (!t.hasUnit)
+                    {
+                        adjacentTiles.Add(col.GetComponent<WorldTile>());
+                    }
+                }
             }
         }
     }
