@@ -10,40 +10,53 @@ public class ButtonScript : MonoBehaviour {
 
     public ButtonType myType;
 
+    GameManager gm;
+
+    public bool activated;
+
+    private void Start()
+    {
+        gm = FindObjectOfType<GameManager>();
+    }
+
     private void OnMouseEnter()
     {
         Cursor.visible = true;
-        FindObjectOfType<GameManager>().ToggleFakeCursor();
+        gm.ToggleFakeCursor();
     }
 
     private void OnMouseExit()
     {
         Cursor.visible = false;
-        FindObjectOfType<GameManager>().ToggleFakeCursor();
+        gm.ToggleFakeCursor();
     }
 
     private void OnMouseDown()
     {
-        if (FindObjectOfType<GameManager>().activeUnit)
+        if (!activated)
         {
-            if (myType == ButtonType.move)
+            if (FindObjectOfType<GameManager>().activeUnit)
             {
-                FindObjectOfType<GameManager>().ShowTilesInMoveReach();
+                if (myType == ButtonType.move)
+                {
+                    gm.ShowTilesInMoveReach();
+                }
+                if (myType == ButtonType.attack)
+                {
+                    gm.ShowTilesInAttackReach();
+                }
+                if (myType == ButtonType.item)
+                {
+                    gm.ShowTilesInMoveReach();
+                }
             }
-            if (myType == ButtonType.attack)
+            if (myType == ButtonType.end)
             {
-                FindObjectOfType<GameManager>().ShowTilesInAttackReach();
-            }
-            if (myType == ButtonType.item)
-            {
-                FindObjectOfType<GameManager>().ShowTilesInMoveReach();
+                gm.EndTurn();
+                Cursor.visible = false;
+                gm.ToggleFakeCursor();
             }
         }
-        if (myType == ButtonType.end)
-        {
-            FindObjectOfType<GameManager>().ShowTilesInMoveReach();
-        }
-
     }
 
 }

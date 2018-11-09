@@ -14,6 +14,8 @@ public class UnitScript : MonoBehaviour {
     public WorldTile endTile;
     short counter;
 
+    public short playerNum;
+
     void Start () {
         gm = FindObjectOfType<GameManager>();
 	}
@@ -46,9 +48,12 @@ public class UnitScript : MonoBehaviour {
             {
                 if((Vector2)u.transform.position == (Vector2)t.transform.position)
                 {
-                    u.DealDamage(damage);
-                    attacking = false;
-                    return;
+                    if (gm.friendlyFire || u.playerNum != playerNum)
+                    {
+                        u.DealDamage(damage);
+                        attacking = false;
+                        return;
+                    }
                 }
             }
         }
@@ -60,9 +65,9 @@ public class UnitScript : MonoBehaviour {
         if(health <= 0)
         {
             gm.units.Remove(this);
-            gm.ResetTiles();
             DestroyUnit();
         }
+        gm.ResetTiles();
     }
 
     public void ActivateUnit()

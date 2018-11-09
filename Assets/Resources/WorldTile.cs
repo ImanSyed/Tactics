@@ -35,6 +35,13 @@ public class WorldTile: MonoBehaviour {
             {
                 gm.MakePath(this);
                 gm.ResetTiles();
+                foreach(ButtonScript button in FindObjectsOfType<ButtonScript>())
+                {
+                    if(button.myType == ButtonScript.ButtonType.move)
+                    {
+                        button.activated = true;
+                    }
+                }
             }
             if (!moveEffect.activeInHierarchy)
             {
@@ -53,6 +60,13 @@ public class WorldTile: MonoBehaviour {
             if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
             {
                 gm.activeUnit.PerformAttack(this);
+                foreach (ButtonScript button in FindObjectsOfType<ButtonScript>())
+                {
+                    if (button.myType == ButtonScript.ButtonType.attack)
+                    {
+                        button.activated = true;
+                    }
+                }
             }
             if (!attackEffect.activeInHierarchy)
             {

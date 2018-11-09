@@ -18,6 +18,10 @@ public class GameManager : MonoBehaviour {
     public GameObject cursorObject, activeEffect;
 
     [SerializeField] GameObject UIObject;
+
+    short playerTurn = 1;
+
+    public bool friendlyFire;
     
 	void Start () {
 
@@ -27,8 +31,6 @@ public class GameManager : MonoBehaviour {
 
         UpdateMap();
 
-        activeUnit = FindObjectOfType<UnitScript>();
-        activeUnit.ActivateUnit();
 
         Cursor.visible = false;
 	}
@@ -51,6 +53,18 @@ public class GameManager : MonoBehaviour {
         else if (UIObject.activeInHierarchy)
         {
             UIObject.SetActive(false);
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            foreach (UnitScript u in units)
+            {
+                if ((Vector2)u.transform.position == (Vector2)cursorObject.transform.position && u.playerNum == playerTurn)
+                {
+                    activeUnit = u;
+                    activeUnit.ActivateUnit();
+                }
+            }
         }
     }
 
@@ -88,6 +102,7 @@ public class GameManager : MonoBehaviour {
 
     public void ShowTilesInAttackReach()
     {
+        ResetTiles();
         WorldTile activeTile = null;
 
         activeUnit.attacking = true;
@@ -110,8 +125,10 @@ public class GameManager : MonoBehaviour {
         {
             WorldTile t = process.Dequeue();
 
-            
-            t.inAttackReach = true;
+            if (t.transform.position != activeUnit.transform.position)
+            {
+                t.inAttackReach = true;
+            }
 
             if (t.tileDistance < activeUnit.range)
             {
@@ -132,6 +149,7 @@ public class GameManager : MonoBehaviour {
 
     public void ShowTilesInMoveReach()
     {
+        ResetTiles();
         WorldTile activeTile = null;
 
         foreach(WorldTile tile in tiles)
@@ -199,6 +217,25 @@ public class GameManager : MonoBehaviour {
             tile.tileDistance = 0;
         }
         UpdateMap();
+    }
+
+    public void EndTurn()
+    {
+        ResetTiles();
+        activeUnit = null;
+        activeEffect.transform.position = new Vector2(-1000, -1000);
+        if(playerTurn == 1)
+        {
+            playerTurn = 2;
+        }
+        else
+        {
+            playerTurn = 1;
+        }
+        foreach(ButtonScript button in FindObjectsOfType<ButtonScript>())
+        {
+            button.activated = false;
+        }
     }
 
     public void DeactivateUnits()
