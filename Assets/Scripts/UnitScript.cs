@@ -8,7 +8,7 @@ public class UnitScript : MonoBehaviour {
 
     GameManager gm;
     public short moves = 3, range = 5, health = 3, damage = 2, movesRemaining;
-    [SerializeField] float moveSpeed = 0.005f;
+    [SerializeField] float moveSpeed;
     public bool active, moving, attacking;
     Vector2 destination, startPos;
     public WorldTile endTile;
@@ -16,8 +16,11 @@ public class UnitScript : MonoBehaviour {
 
     public short playerNum;
 
+    Animator animator;
+
     void Start () {
         gm = FindObjectOfType<GameManager>();
+        animator = GetComponent<Animator>();
 	}
 
     private void Update()
@@ -27,6 +30,10 @@ public class UnitScript : MonoBehaviour {
             if(transform.position == endTile.transform.position)
             {
                 moving = false;
+                if (animator.GetInteger("MoveDirection") != 0)
+                {
+                    animator.SetInteger("MoveDirection", 0);
+                }
                 gm.ResetTiles();
             }
             else
@@ -36,6 +43,39 @@ public class UnitScript : MonoBehaviour {
                     gm.path.Pop();
                 }
                 transform.position = Vector2.MoveTowards(transform.position, gm.path.Peek().transform.position, moveSpeed);
+                Vector2 dir = (Vector2)transform.position - (Vector2)gm.path.Peek().transform.position;
+                if (dir.normalized == -Vector2.right)
+                {
+                    if (animator.GetInteger("MoveDirection") != 3)
+                    {
+                        animator.SetInteger("MoveDirection", 3);
+                        GetComponent<SpriteRenderer>().flipX = false;
+                    }
+                }
+                else if (dir.normalized == Vector2.right)
+                {
+                    if (animator.GetInteger("MoveDirection") != 3)
+                    {
+                        animator.SetInteger("MoveDirection", 3);
+                        GetComponent<SpriteRenderer>().flipX = true;
+                    }
+                }
+                else if (dir.normalized == Vector2.up)
+                {
+                    if (animator.GetInteger("MoveDirection") != 1)
+                    {
+                        animator.SetInteger("MoveDirection", 1);
+                        GetComponent<SpriteRenderer>().flipX = false;
+                    }
+                }
+                else if (dir.normalized == -Vector2.up)
+                {
+                    if (animator.GetInteger("MoveDirection") != 2)
+                    {
+                        animator.SetInteger("MoveDirection", 2);
+                        GetComponent<SpriteRenderer>().flipX = false;
+                    }
+                }
             }
         }
     }
