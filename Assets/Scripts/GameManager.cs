@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour {
 
     [SerializeField] GameObject UIObject;
 
-    short playerTurn = 1;
+    short playerTurn = 1, p1Potions = 2, p2Potions = 2;
 
     public bool friendlyFire;
     
@@ -144,7 +144,7 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
-        activeTile.inMoveReach = false;
+        activeTile.inAttackReach = false;
     }
 
     public void ShowTilesInMoveReach()
@@ -236,6 +236,29 @@ public class GameManager : MonoBehaviour {
         {
             button.activated = false;
         }
+    }
+
+    public void GivePotion()
+    {
+        switch (playerTurn)
+        {
+            case 1:
+                if(p1Potions > 0)
+                {
+                    activeUnit.health += 3;
+                    p1Potions--;
+                }
+                break;
+            case 2:
+                if (p2Potions > 0)
+                {
+                    activeUnit.health += 3;
+                    p2Potions--;
+                }
+                break;
+
+        }
+
     }
 
     public void DeactivateUnits()
