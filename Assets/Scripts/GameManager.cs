@@ -288,21 +288,26 @@ public class GameManager : MonoBehaviour {
 
     public void GivePotion()
     {
+        activeUnit.health += 3;
+        activeUnit.mana += 3;
+        foreach(ButtonScript button in FindObjectsOfType<ButtonScript>())
+        {
+            if(button.myType == ButtonScript.ButtonType.item)
+            {
+                button.activated = true;
+            }
+        }
         switch (playerTurn)
         {
             case 1:
                 if (p1Potions > 0)
                 {
-                    activeUnit.health += 3;
-                    activeUnit.mana += 3;
                     p1Potions--;
                 }
                 break;
             case 2:
                 if (p2Potions > 0)
                 {
-                    activeUnit.health += 3;
-                    activeUnit.mana += 3;
                     p2Potions--;
                 }
                 break;

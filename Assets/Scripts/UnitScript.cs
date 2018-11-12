@@ -92,19 +92,19 @@ public class UnitScript : MonoBehaviour {
                         GetComponent<SpriteRenderer>().flipX = true;
                     }
                 }
-                if (dir.normalized == Vector2.up)
-                {
-                    if (animator.GetInteger("MoveDirection") != 1)
-                    {
-                        animator.SetInteger("MoveDirection", 1);
-                        GetComponent<SpriteRenderer>().flipX = false;
-                    }
-                }
                 if (dir.normalized == -Vector2.up)
                 {
                     if (animator.GetInteger("MoveDirection") != 2)
                     {
                         animator.SetInteger("MoveDirection", 2);
+                        GetComponent<SpriteRenderer>().flipX = false;
+                    }
+                }
+                if (dir.normalized == Vector2.up)
+                {
+                    if (animator.GetInteger("MoveDirection") != 1)
+                    {
+                        animator.SetInteger("MoveDirection", 1);
                         GetComponent<SpriteRenderer>().flipX = false;
                     }
                 }
