@@ -5,7 +5,7 @@ public class ButtonScript : MonoBehaviour {
 
     public enum ButtonType
     {
-        move, attack, item, end, none
+        move, attack, item, ability, end, none
     }
 
     public ButtonType myType;
@@ -35,8 +35,9 @@ public class ButtonScript : MonoBehaviour {
     {
         if (!activated)
         {
-            if (FindObjectOfType<GameManager>().activeUnit)
+            if (gm.activeUnit)
             {
+                
                 if (myType == ButtonType.move)
                 {
                     gm.ShowTilesInMoveReach();
@@ -47,7 +48,15 @@ public class ButtonScript : MonoBehaviour {
                 }
                 if (myType == ButtonType.item)
                 {
-                    gm.ShowTilesInMoveReach();
+                    gm.GivePotion();
+                    gm.unitLocked = true;
+                }
+                if(myType == ButtonType.ability)
+                {
+                    if(gm.activeUnit.mana > 0) {
+                        gm.ShowTilesInSpellReach();
+                        gm.unitLocked = true;
+                    }
                 }
             }
             if (myType == ButtonType.end)

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WorldTile: MonoBehaviour {
 
-    public bool hasUnit, inMoveReach, visited, unpassable, inAttackReach;
+    public bool hasUnit, inMoveReach, visited, unpassable, inAttackReach, inSpellReach;
 
     public WorldTile parent;
 
@@ -12,19 +12,22 @@ public class WorldTile: MonoBehaviour {
 
     GameManager gm;
 
-    [SerializeField] GameObject moveReachEffect, attackReachEffect;
+    [SerializeField] GameObject moveReachEffect, attackReachEffect, spellReachEffect;
 
-    GameObject moveEffect, attackEffect;
+    GameObject moveEffect, attackEffect, spellEffect;
 
     public List<WorldTile> adjacentTiles;
 
-    private void Start()
+    private void Awake()
     {
         gm = FindObjectOfType<GameManager>();
         moveEffect = Instantiate(moveReachEffect, transform.position, Quaternion.identity);
         attackEffect = Instantiate(attackReachEffect, transform.position, Quaternion.identity);
+        spellEffect = Instantiate(spellReachEffect, transform.position, Quaternion.identity);
+
         moveEffect.SetActive(false);
         attackEffect.SetActive(false);
+        spellEffect.SetActive(false);
     }
 
     private void Update()
@@ -35,6 +38,10 @@ public class WorldTile: MonoBehaviour {
             {
                 gm.MakePath(this);
                 gm.ResetTiles();
+                if(gm.activeUnit.movesRemaining == 0)
+                {
+                    gm.unitLocked = true;
+                }
                 foreach(ButtonScript button in FindObjectsOfType<ButtonScript>())
                 {
                     if(button.myType == ButtonScript.ButtonType.move)
@@ -60,6 +67,8 @@ public class WorldTile: MonoBehaviour {
             if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
             {
                 gm.activeUnit.PerformAttack(this);
+                gm.unitLocked = true;
+
                 foreach (ButtonScript button in FindObjectsOfType<ButtonScript>())
                 {
                     if (button.myType == ButtonScript.ButtonType.attack)
@@ -80,7 +89,32 @@ public class WorldTile: MonoBehaviour {
                 attackEffect.SetActive(false);
             }
         }
-        
+        if (inSpellReach)
+        {
+            if (Input.GetMouseButtonDown(0) && (Vector2)gm.cursorObject.transform.position == (Vector2)transform.position)
+            {
+                gm.activeUnit.CastSpell(this);
+                foreach (ButtonScript button in FindObjectsOfType<ButtonScript>())
+                {
+                    if (button.myType == ButtonScript.ButtonType.ability)
+                    {
+                        button.activated = true;
+                    }
+                }
+            }
+            if (!spellEffect.activeInHierarchy)
+            {
+                spellEffect.SetActive(true);
+            }
+        }
+        else
+        {
+            if (spellEffect.activeInHierarchy)
+            {
+                spellEffect.SetActive(false);
+            }
+        }
+
     }
 
     public void FindNeighbours(bool includeUnits)

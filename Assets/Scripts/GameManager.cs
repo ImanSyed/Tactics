@@ -1,17 +1,16 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour {
 
-    public List<UnitScript> units;
-    public WorldTile[] tiles;
-
-    public UnitScript activeUnit;
+    [HideInInspector] public List<UnitScript> units;
+    [HideInInspector] public WorldTile[] tiles;
+    [HideInInspector] public UnitScript activeUnit;
+    [HideInInspector] public Stack<WorldTile> path = new Stack<WorldTile>();
 
     List<WorldTile> tilesInReach;
-
-    public Stack<WorldTile> path = new Stack<WorldTile>();
 
     float snapValue = 1f;
 
@@ -21,8 +20,10 @@ public class GameManager : MonoBehaviour {
 
     short playerTurn = 1, p1Potions = 2, p2Potions = 2;
 
-    public bool friendlyFire;
-    
+    public bool friendlyFire, unitLocked;
+
+    [SerializeField] Text hp, sp, mp;
+
 	void Start () {
 
         tiles = FindObjectsOfType<WorldTile>();
@@ -30,7 +31,6 @@ public class GameManager : MonoBehaviour {
         units = FindObjectsOfType<UnitScript>().ToList();
 
         UpdateMap();
-
 
         Cursor.visible = false;
 	}
@@ -45,6 +45,9 @@ public class GameManager : MonoBehaviour {
         if (activeUnit)
         {
             activeEffect.transform.position = activeUnit.transform.position;
+            hp.text = activeUnit.health.ToString();
+            mp.text = activeUnit.movesRemaining.ToString();
+            sp.text = activeUnit.mana.ToString();
             if (!UIObject.activeInHierarchy)
             {
                 UIObject.SetActive(true);
@@ -55,7 +58,7 @@ public class GameManager : MonoBehaviour {
             UIObject.SetActive(false);
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !unitLocked)
         {
             foreach (UnitScript u in units)
             {
@@ -130,7 +133,7 @@ public class GameManager : MonoBehaviour {
                 t.inAttackReach = true;
             }
 
-            if (t.tileDistance < activeUnit.range)
+            if (t.tileDistance < activeUnit.attackRange)
             {
                 foreach (WorldTile tile in t.adjacentTiles)
                 {
@@ -145,6 +148,49 @@ public class GameManager : MonoBehaviour {
             }
         }
         activeTile.inAttackReach = false;
+    }
+
+    public void ShowTilesInSpellReach()
+    {
+        ResetTiles();
+        WorldTile activeTile = null;
+
+        activeUnit.casting = true;
+
+        foreach (WorldTile tile in tiles)
+        {
+            if (tile.transform.position == activeUnit.transform.position)
+            {
+                activeTile = tile;
+            }
+            tile.FindNeighbours(true);
+        }
+
+        Queue<WorldTile> process = new Queue<WorldTile>();
+
+        process.Enqueue(activeTile);
+        activeTile.visited = true;
+
+        while (process.Count > 0)
+        {
+            WorldTile t = process.Dequeue();
+
+             t.inSpellReach = true;
+
+            if (t.tileDistance < activeUnit.attackRange)
+            {
+                foreach (WorldTile tile in t.adjacentTiles)
+                {
+                    if (!tile.visited)
+                    {
+                        tile.parent = t;
+                        tile.visited = true;
+                        tile.tileDistance = (short)(1 + t.tileDistance);
+                        process.Enqueue(tile);
+                    }
+                }
+            }
+        }
     }
 
     public void ShowTilesInMoveReach()
@@ -214,6 +260,7 @@ public class GameManager : MonoBehaviour {
             tile.parent = null;
             tile.hasUnit = false;
             tile.inAttackReach = false;
+            tile.inSpellReach = false;
             tile.tileDistance = 0;
         }
         UpdateMap();
@@ -221,6 +268,7 @@ public class GameManager : MonoBehaviour {
 
     public void EndTurn()
     {
+        unitLocked = false;
         ResetTiles();
         activeUnit = null;
         activeEffect.transform.position = new Vector2(-1000, -1000);
@@ -243,9 +291,10 @@ public class GameManager : MonoBehaviour {
         switch (playerTurn)
         {
             case 1:
-                if(p1Potions > 0)
+                if (p1Potions > 0)
                 {
                     activeUnit.health += 3;
+                    activeUnit.mana += 3;
                     p1Potions--;
                 }
                 break;
@@ -253,12 +302,11 @@ public class GameManager : MonoBehaviour {
                 if (p2Potions > 0)
                 {
                     activeUnit.health += 3;
+                    activeUnit.mana += 3;
                     p2Potions--;
                 }
                 break;
-
         }
-
     }
 
     public void DeactivateUnits()
